@@ -3,6 +3,7 @@ package com.example.E_Shopping.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,11 +22,12 @@ import com.example.E_Shopping.service.ProductService;
 
 @RestController
 @RequestMapping("/api/products")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ProductController {
     @Autowired
     ProductService productService;
 
-    @GetMapping
+    @GetMapping("/getAllProducts")
     public List<Products> getAllProducts() {
         return productService.getAllProducts();
     }
@@ -35,7 +37,7 @@ public class ProductController {
         return productService.searchProductsByName(name);
     }
 
-    @PostMapping
+    @PostMapping("/addProduct")
     public ResponseEntity<ResponseObject> saveProduct(@RequestBody Products product) {
         ResponseObject responseObject = productService.saveProduct(product);
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);

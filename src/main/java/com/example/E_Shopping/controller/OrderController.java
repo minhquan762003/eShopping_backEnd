@@ -44,11 +44,6 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    // @GetMapping("/{id}")
-    // public List<Orders> getAllOrdersByUserId(Long userId) {
-    // return orderService.getOrderByUserId(userId);
-    // }
-
     @PostMapping
     public ResponseEntity<ResponseObject> saveOrder(@RequestBody Orders order) {
         ResponseObject responseObject = orderService.saveOrder(order);
@@ -76,13 +71,4 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);
     }
 
-    // @GetMapping("/{id}")
-    // ResponseEntity<ResponseObject> getOrderById(@PathVariable Long id) {
-    // ResponseObject responseObject = orderService.getOrderById(id);
-    // if ("Failed".equals(responseObject.getStatus())) {
-    // return
-    // ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(responseObject);
-    // }
-    // return ResponseEntity.status(HttpStatus.OK).body(responseObject);
-    // }
 }
