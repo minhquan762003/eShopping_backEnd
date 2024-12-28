@@ -17,7 +17,6 @@ import java.util.*;
 
 import com.example.E_Shopping.model.Products;
 import com.example.E_Shopping.model.ResponseObject;
-import com.example.E_Shopping.model.SearchRequest;
 import com.example.E_Shopping.service.ProductService;
 
 @RestController
@@ -64,6 +63,15 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);
     }
 
+    @GetMapping("/category/{category}")
+    ResponseEntity<ResponseObject> getProductsByCategory(@PathVariable String category){
+        ResponseObject responseObject = productService.getProductByCategory(category);
+        if ("Failed".equals(responseObject.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseObject);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(responseObject);
+    }
+    
     @GetMapping("/{id}")
     ResponseEntity<ResponseObject> getProductById(@PathVariable Long id) {
         ResponseObject responseObject = productService.getProductById(id);

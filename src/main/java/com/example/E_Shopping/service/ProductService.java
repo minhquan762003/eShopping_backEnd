@@ -47,7 +47,13 @@ public class ProductService implements WebMvcConfigurer {
 
         return new ResponseObject("Failed", "Khong tim duoc san pham id = " + id + " de xoa ", "");
     }
-
+    public ResponseObject getProductByCategory(String category){
+        List<Products> foundProducts = productRepository.findByCategory(category);
+        if (foundProducts.isEmpty()) {
+            return new ResponseObject("Failed", "Khong tim duoc san pham nao theo category ", "");
+        }
+        return new ResponseObject("ok", "Tim san pham theo category thanh cong", foundProducts);
+    }
     public ResponseObject updateStudentById(Products newProduct, Long id) {
         if (existById(id)) {
             Products updatedProduct = productRepository.findById(id).map(

@@ -52,7 +52,7 @@ public class OrderService implements WebMvcConfigurer {
         boolean exist = orderRepository.existsById(id);
         if (exist) {
             orderRepository.deleteById(id);
-            return new ResponseObject("ok", "Xoa san pham thanh cong", getOrderById(id));
+            return new ResponseObject("ok", "Xoa san pham thanh cong", "");
         }
 
         return new ResponseObject("Failed", "Khong tim duoc san pham id = " + id + " de xoa ", "");

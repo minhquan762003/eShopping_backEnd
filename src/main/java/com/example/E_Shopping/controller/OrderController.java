@@ -50,15 +50,15 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);
     }
 
-    @DeleteMapping
-    public ResponseEntity<ResponseObject> deleteOrderById(@PathVariable Long id) {
-        boolean exist = orderService.existById(id);
+    @DeleteMapping("/delete/{orderId}")
+    public ResponseEntity<ResponseObject> deleteOrderById(@PathVariable Long orderId) {
+        boolean exist = orderService.existById(orderId);
         if (exist) {
-            ResponseObject responseObject = orderService.deleteOrderById(id);
+            ResponseObject responseObject = orderService.deleteOrderById(orderId);
             return ResponseEntity.status(HttpStatus.OK).body(responseObject);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new ResponseObject("Failed", "Khong co don hang = " + id + " de xoa", ""));
+                new ResponseObject("Failed", "Khong co don hang = " + orderId + " de xoa", ""));
     }
 
     @PutMapping
