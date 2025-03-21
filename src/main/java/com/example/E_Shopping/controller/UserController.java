@@ -3,6 +3,7 @@ package com.example.E_Shopping.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<Users> getAllUsers() {
         return userService.getAllUsers();
     }
@@ -32,7 +34,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ResponseObject> saveUser(@RequestBody Users user) {
         ResponseObject responseObject = userService.registerUser(user);
-        if(responseObject.getStatus().equals("Failed"))
+        if (responseObject.getStatus().equals("Failed"))
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(responseObject);
 
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);
@@ -49,6 +51,7 @@ public class UserController {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ResponseObject> deleteUserById(@PathVariable Long id) {
         boolean exist = userService.existById(id);
         if (exist) {
@@ -59,9 +62,10 @@ public class UserController {
                 new ResponseObject("Failed", "Khong co nguoi dung = " + id + " de xoa", ""));
     }
 
-    @PutMapping
-    ResponseEntity<ResponseObject> updateUserById(@RequestBody Users newUser, @PathVariable Long id) {
-        ResponseObject responseObject = userService.updateUserById(newUser, id);
+    @PutMapping("/update/{userId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
+    ResponseEntity<ResponseObject> updateUserById(@RequestBody Users newUser, @PathVariable Long userId) {
+        ResponseObject responseObject = userService.updateUserById(newUser, userId);
         if ("Failed".equals(responseObject.getStatus())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseObject);
         }
@@ -71,7 +75,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getStudentById(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    ResponseEntity<ResponseObject> getUserById(@PathVariable Long id) {
         ResponseObject responseObject = userService.getUserById(id);
         if ("Failed".equals(responseObject.getStatus())) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(responseObject);
@@ -79,5 +84,4 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(responseObject);
     }
 
-    
 }

@@ -7,10 +7,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.example.E_Shopping.auth.JwtUtils;
 import com.example.E_Shopping.model.ResponseObject;
+import com.example.E_Shopping.model.Roles;
+import com.example.E_Shopping.model.UserAndRole;
 import com.example.E_Shopping.model.Users;
-import com.example.E_Shopping.model.Users.Role;
+import com.example.E_Shopping.repository.RoleRepository;
+import com.example.E_Shopping.repository.UserAndRoleRepository;
 import com.example.E_Shopping.repository.UserRepository;
+
+import co.elastic.clients.elasticsearch.security.User;
+
 import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.xml.crypto.Data;
 
 @Service
 public class UserService implements WebMvcConfigurer {
@@ -23,6 +32,14 @@ public class UserService implements WebMvcConfigurer {
 
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UserAndRoleRepository userAndRoleRepository;
+
+    @Autowired
+    private UserAndRoleService userAndRoleService;
+    
+    @Autowired
+    private RoleRepository roleRepository;
     // Tiêm BCryptPasswordEncoder
     public UserService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -32,6 +49,7 @@ public class UserService implements WebMvcConfigurer {
         return userRepository.findAll();
     }
 
+    
     public ResponseObject getUserById(Long id) {
         Optional<Users> foundUser = userRepository.findById(id);
         if (foundUser.isPresent()) {
@@ -54,9 +72,13 @@ public class UserService implements WebMvcConfigurer {
         if (existById(id)) {
             Users updatedUser = userRepository.findById(id).map(
                     user -> {
-                        user.setUsername(newUser.getUsername());
-                        user.setPassword(newUser.getPassword());
-                        user.setEmail(newUser.getEmail());
+                        // user.setUsername(newUser.getUsername());
+                        // user.setPassword(passwordEncoder.encode(newUser.getPassword()));
+                        // user.setEmail(newUser.getEmail());
+                        // user.setBirthDay(newUser.getBirthDay());
+                        user.setGender(newUser.getGender());
+                        user.setName(newUser.getName());
+                        user.setNumber(newUser.getNumber());
                         return userRepository.save(user);
                     }).orElseGet(() -> {
                         return userRepository.save(newUser);
@@ -72,20 +94,33 @@ public class UserService implements WebMvcConfigurer {
     public boolean existById(Long id) {
         return this.userRepository.existsById(id);
     }
-
     public ResponseObject loginUser(String username, String password) {
         Optional<Users> user = userRepository.findByUsername(username);
 
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            // Tạo token JWT chứa cả vai trò (role)
-            String token = jwtUtils.generateToken(user.get().getUserId(),username, user.get().getRole());
-            user.get().setToken(token);
-            return new ResponseObject("ok", "Đăng nhập thành công", user);
+
+            List<UserAndRole> userRoles = userAndRoleRepository.findByUsersUserId(user.get().getUserId());
+            Optional<Users> foundUser = userRepository.findByUsername(username);
+            Date bithDay = foundUser.get().getBirthDay();
+            String email = foundUser.get().getEmail();
+            String number = foundUser.get().getNumber();
+            int gender = foundUser.get().getGender();
+            Date createdAt = foundUser.get().getCreatedAt();
+            Date updatedAt = foundUser.get().getUpdatedAt();
+            String name = foundUser.get().getName();
+            Set<String> roles = userRoles.stream()
+                                         .map(ur -> ur.getRoles().getRoleName()) // Lấy role từ UserAndRole
+                                         .collect(Collectors.toSet());
+            
+            System.out.println("Danh sách roles của user: " + roles);
+
+            String token = jwtUtils.generateToken(user.get().getUserId(), username,email, roles,bithDay,number,gender,createdAt,updatedAt, name);
+
+            return new ResponseObject("ok", "Đăng nhập thành công", token);
         } else {
             return new ResponseObject("Failed", "Đăng nhập thất bại", "");
         }
     }
-
     public ResponseObject registerUser(Users user) {
         Optional<Users> foundUser = userRepository.findByUsername(user.getUsername());
         Optional<Users> foundEmail = userRepository.findByEmail(user.getEmail());
@@ -96,11 +131,16 @@ public class UserService implements WebMvcConfigurer {
 
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Gán vai trò mặc định là USER
-        user.setRole(Role.ADMIN);
+        Roles userRole = roleRepository.findByRoleName("USER");
+        
 
         Users savedUser = userRepository.save(user);
+
+        UserAndRole userAndRole = new UserAndRole();
+        userAndRole.setRoles(userRole);
+        userAndRole.setUsers(savedUser);
+
+        userAndRoleService.saveUserAndRoleService(userAndRole);
         return new ResponseObject("ok", "Đăng ký thành công", savedUser);
     }
 

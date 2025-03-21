@@ -2,6 +2,7 @@ package com.example.E_Shopping.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,24 +17,20 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
             throws Exception {
-        return http.csrf().disable()
-                .cors() // Enable CORS
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/users/login", "/api/users/register", "/api/products/getAllProducts").permitAll()
-                .requestMatchers("/api/users").hasAnyAuthority("ADMIN")
-                .requestMatchers("/api/products/addProduct").hasAnyAuthority("SELLER", "ADMIN")
-                .anyRequest().hasAnyAuthority("USER", "ADMIN")
-                .and()
-                .rememberMe() // Kích hoạt Remember Me
-                .key("R3m3mb3rM3$ecureKey") // Secret key mã hóa token Remember Me
-                .rememberMeCookieName("myRememberMeCookie") // Tên cookie lưu trữ token
-                .tokenValiditySeconds(7 * 24 * 60 * 60) // Hiệu lực cookie: 7 ngày
-                .and()
+        return http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/users/login", "/api/users/register", "/api/products/getAllProducts",
+                                "/api/products/category/{category}", "/api/products/sync", "/api/products/search",
+                                "/api/products/autocomplete")
+                        .permitAll()
+                        .anyRequest().authenticated())
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -43,14 +40,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // CORS configuration bean
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); 
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Chỉ cho phép từ Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
+        configuration.addExposedHeader("Authorization"); // Cho phép Angular lấy JWT từ response
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

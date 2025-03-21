@@ -51,8 +51,12 @@ public class OrderService implements WebMvcConfigurer {
     public ResponseObject deleteOrderById(Long id) {
         boolean exist = orderRepository.existsById(id);
         if (exist) {
-            orderRepository.deleteById(id);
-            return new ResponseObject("ok", "Xoa san pham thanh cong", "");
+            try {
+                orderRepository.deleteById(id);
+                return new ResponseObject("ok", "Xoa san pham thanh cong", "");
+            } catch (Exception e) {
+                return new ResponseObject("Failed", "Khong xoa duoc san pham ", "");
+            }
         }
 
         return new ResponseObject("Failed", "Khong tim duoc san pham id = " + id + " de xoa ", "");

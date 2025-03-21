@@ -1,7 +1,5 @@
 package com.example.E_Shopping.auth;
 
-
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -23,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -31,9 +32,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             if (jwtUtils.validateToken(token)) {
                 String username = jwtUtils.extractUsername(token);
-                String role = jwtUtils.extractRole(token); // Trích xuất vai trò
+                List<String> roles = jwtUtils.extractRole(token); // Trích xuất vai trò
+
                 Long userId = jwtUtils.extractUserId(token); // Trích xuất userId từ token
-                var authorities = Collections.singletonList(new SimpleGrantedAuthority(role)); 
+                // var authorities = Collections.singletonList(new
+                // SimpleGrantedAuthority(role));
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
                 var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authentication.setDetails(userId); // Gán userId vào authentication details
                 SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -41,7 +48,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-    
+
 }
-
-

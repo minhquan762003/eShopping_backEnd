@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.example.E_Shopping.model.Orders;
 import com.example.E_Shopping.model.OrderItems;
 import com.example.E_Shopping.model.ResponseObject;
 import com.example.E_Shopping.service.OrderItemService;
